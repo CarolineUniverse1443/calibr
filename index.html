@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header class="header-main">
+            <div class="container">
+                <div class="header-container">
+                    <a href=""><img src="images/logotip.png" alt="logo"></a>
+                    <nav class="navigation">
+                        <ul>
+                            <li class="navigation-li" v-if="route != 'home'">
+                                <a class="info" @click.prevent="route = 'home'" href="#">Главная</a>
+                            </li>
+                            <li class="navigation-li" v-if="status != 'admin'">
+                                <a class="info" @click.prevent="route = 'products'" href="#">Товары</a>
+                            </li>
+                            <li class="navigation-li" v-if="token == null">
+                                <a class="info" @click.prevent="route = 'signin'" href="#">Войти</a>
+                            </li>
+                            <li class="navigation-li" v-if="token != null">
+                                <a class="info" @click.prevent="logout" href="#">Выйти</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        <main>
+            <section id="main_route" v-if="route == 'home'">
+                <div class="container">
+                    <div class="buttons_btn" v-if="status == 'admin'">
+                        <input type="button" value="Товары" @click.prevent="table = 'products'">
+                        <input type="button" value="Клиенты" @click.prevent="getEntries('clients')">
+                        <input type="button" value="Заказы" @click.prevent="getEntries('purchases')">
+                    </div>
+                    <div class="search_block">
+                        <input type="text" class="search_block_inputs" placeholder="Поиск" v-model="finder">
+                    </div>
+                    <div class="slider" v-if="token == null || status != 'admin'">
+                        <div class="slider-content">
+                            <h1>Калибр</h1>
+                            <div class="slider-content-text">
+                                <p>Наш оружейный магазин начал свою деятельность в
+                                    1999 году с открытия небольшого магазина по продаже оружия, сегодня мы готовы
+                                    удовлетворить
+                                    потребности самого требовательного покупателя. Мы открыли несколько фирменных
+                                    магазинов под брендом "КАЛИБР" в разных районах города, чтобы наш клиент мог
+                                    купить все, что ему нужно.</p>
+                            </div>
+                        </div>
+
+                        <div class="item  middle">
+                            <div class="items">
+                                <input class="item-input" type="radio" name="r" id="r1" checked>
+                                <input class="item-input" type="radio" name="r" id="r2">
+                                <input class="item-input" type="radio" name="r" id="r3">
+                                <input class="item-input" type="radio" name="r" id="r4">
+
+
+                                <div class="items-div s1"><img class="description-img" src="images/content1.jpg"
+                                        alt="description">
+                                </div>
+                                <div class="items-div"><img class="description-img" src="images/content2.jpg"
+                                        alt="description">
+                                </div>
+                                <div class="items-div"><img class="description-img" src="images/content3.jpg"
+                                        alt="description">
+                                </div>
+                                <div class="items-div"><img class="description-img" src="images/content4.jpg"
+                                        alt="description">
+                                </div>
+                            </div>
+
+                            <div class="navi">
+                                <label for="r1" class="bar"></label>
+                                <label for="r2" class="bar"></label>
+                                <label for="r3" class="bar"></label>
+                                <label for="r4" class="bar"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="products">
+                        <div class="container-products">
+                            <input type="button" class="add" v-if="table=='products' && token != null" @click="addVisible = true; formMode='create'" value="Добавить">
+                            <input type="button" class="add" v-if="table=='clients'" value="Добавить" @click="addVisible = true; formMode='create'">
+                            <input type="button" class="add" v-if="table=='purchases'" value="Добавить" @click="addVisible = true; formMode='create'">
+                            <h2 v-if="table == 'products'">Товары</h2>
+                            <h2 v-if="table == 'clients'">Клиенты</h2>
+                            <h2 v-if="table == 'purchases'">Заказы</h2>
+                            <div class="multi">
+                                <div class="cards" v-for="p in products" :key="p.id" v-if="table == 'products'">
+                                    <div class="card-descr">
+                                        <div class="card-image">
+                                            <img :src="p.image" alt="img">
+                                        </div>  
+                                        <h4>{{p.product_name}}</h4>
+                                        <div class="description">
+                                            <p>{{p.characteristic}}</p>
+                                        </div>
+                                        <div class="price gun">
+                                            <p>{{p.product_price}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="cards_but" v-if="status=='admin'">
+                                        <input type="button" value="Изменить" @click.prevent="fillProduct(p.id, p.product_name, p.characteristic, p.product_price)">
+                                        <input type="button" value="Удалить" @click.prevent="destroy(p.id, table)">
+                                    </div>
+                                </div>
+                                <div class="cards" v-for="p in clients" :key="p.client_id " v-if="table == 'clients'">
+                                    <div class="card-descr">
+                                        <h4>{{p.surname}} {{p.name}} {{p.patronymic}}</h4>
+                                        <div class="price client">
+                                            <p>passport_series: {{p.passport_series}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>passport_id: {{p.passport_id}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>weapon_license_number: {{p.weapon_license_number}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>phone_number: {{p.phone_number}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>password: {{p.password}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="cards_but" v-if="status=='admin'">
+                                        <input type="button" value="Изменить" @click.prevent="fillClient(p)">
+                                        <input type="button" value="Удалить" @click.prevent="destroy(p.client_id, table)">
+                                    </div>
+                                </div>
+                                <div class="cards" v-for="p in purchases" :key="p.purchase_id  " v-if="table == 'purchases'">
+                                    <div class="card-descr">
+                                        <div class="price client">
+                                            <p>{{p.product_name}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>client_id: {{p.client_id}}</p>
+                                        </div>
+                                        <h4>{{p.surname}} {{p.name}} {{p.patronymic}}</h4>
+                                        <div class="price client">
+                                            <p>weapon_license_number: {{p.weapon_license_number}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>number: {{p.number}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>price: {{p.price}}</p>
+                                        </div>
+                                        <div class="price client">
+                                            <p>date: {{p.purchase_date}}</p>
+                                        </div>
+                                    </div>
+                                    <div class="cards_but" v-if="status=='admin'">
+                                        <input type="button" value="Изменить" @click.prevent="fillPurchase(p)">
+                                        <input type="button" value="Удалить"  @click.prevent="destroy(p.purchase_id, table)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="middle">
+                    <div class="middle-img">
+                        <div class="container">
+                            <div class="middle-text">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="sign-register" v-if="table == 'products' && token != null && addVisible">
+                <form action="php" v-if="table=='products'" @submit.prevent="">
+                    <p class="zag">
+                        <strong v-if="formMode == 'create'">Добавление товаров</strong>
+                        <strong v-if="formMode == 'edit'">Изменение товара</strong>
+                    </p>
+                    <p class="bott">Вид оружия <input v-model="commonForm.type_id" name="type_id" type="text"></p>
+                    <p class="bott">Тип оружия <input v-model="commonForm.type_of_goods" name="type_of_goods" type="text"></p>
+                    <p class="bott">Название <input v-model="commonForm.product_name" name="product_name" type="text"></p>
+                    <p class="bott">Описание <input v-model="commonForm.characteristic" name="characteristic" type="text"></p>
+                    <p class="bott">Цена <input v-model="commonForm.product_price" name="product_price" type="text"></p>
+                    <p class="bott but">
+                        <button  v-if="formMode == 'create'" @click="addStuff('products')">Добавить</button>
+                        <button  v-if="formMode == 'edit'" @click="editStuff(commonForm.product_id, table)">Изменить</button>
+                    </p>
+                    <div id="cross" @click="closeForm"></div>
+                </form>
+            </section>
+            <section class="sign-register" v-if="table == 'clients' && token != null && addVisible">
+                <form action="php" v-if="table=='clients'" @submit.prevent="">
+                    <p class="zag">
+                        <strong v-if="formMode == 'create'">Добавление клиентов</strong>
+                        <strong v-if="formMode == 'edit'">Изменение клиента</strong>
+                    </p>
+                    <p class="bott">Фамилия <input v-model="commonForm.surname" name="surname" type="text"></p>
+                    <p class="bott">Имя <input v-model="commonForm.name" name="name" type="text"></p>
+                    <p class="bott">Отчество <input v-model="commonForm.patronymic" name="patronymic" type="text"></p>
+                    <p class="bott">Паспорт серия <input v-model="commonForm.passport_series" name="passport_series" type="text"></p>
+                    <p class="bott">Паспорт номер <input v-model="commonForm.passport_id" name="passport_id" type="text"></p>
+                    <p class="bott">Номер оружейной лицензии <input v-model="commonForm.weapon_license_number" name="weapon_license_number" type="text"></p>
+                    <p class="bott">Телефон <input v-model="commonForm.phone_number" name="phone_number" type="text"></p>
+                    <p class="bott">Пароль <input v-model="commonForm.password" name="password" type="text"></p>
+                    <p class="bott but">
+                        <button v-if="formMode == 'create'" @click="addStuff('clients')">Добавить</button>
+                        <button  v-if="formMode == 'edit'" @click="editStuff(commonForm.client_id, table)">Изменить</button>
+                    </p>
+                    <div id="cross" @click="closeForm"></div>
+                </form>
+            </section>
+            <section class="sign-register" v-if="table == 'purchases' && token != null && addVisible">
+                <form action="php" v-if="table=='purchases'" @submit.prevent="">
+                    <p class="zag">
+                        <strong v-if="formMode == 'create'">Добавление заказов</strong>
+                        <strong v-if="formMode == 'edit'">Изменение заказа</strong>
+                    </p>
+                    <p class="bott">Сотрудник<input v-model="commonForm.employee_id" name="employee_id" type="text"></p>
+                    <p class="bott">Номер товара<input v-model="commonForm.product_id" name="product_id" type="text"></p>
+                    <p class="bott">Вид оружия <input v-model="commonForm.type_id" name="type_id" type="text"></p>
+                    <p class="bott">Тип оружия <input v-model="commonForm.type_of_goods" name="type_of_goods" type="text"></p>
+                    <p class="bott">Название <input v-model="commonForm.product_name" name="product_name" type="text"></p>
+                    <p class="bott">Дата <input v-model="commonForm.purchase_date" name="purchase_date" type="text"></p>
+                    <p class="bott">Номер клиента<input v-model="commonForm.client_id" name="client_id" type="text"></p>
+                    <p class="bott">Фамилия <input v-model="commonForm.surname" name="surname" type="text"></p>
+                    <p class="bott">Имя <input v-model="commonForm.name" name="name" type="text"></p>
+                    <p class="bott">Отчество <input v-model="commonForm.patronymic" name="patronymic" type="text"></p>
+                    <p class="bott">Номер оружейной лицензии <input v-model="commonForm.weapon_license_number" name="weapon_license_number" type="text"></p>
+                    <p class="bott">Количество <input v-model="commonForm.number" name="number" type="text"></p>
+                    <p class="bott">Цена <input v-model="commonForm.price" name="price" type="text"></p>
+                    <p class="bott but">
+                        <button v-if="formMode == 'create'" @click="addStuff('purchases')">Добавить</button>
+                        <button  v-if="formMode == 'edit'" @click="editStuff(commonForm.purchase_id, table)">Изменить</button>
+                    </p>
+                    <div id="cross" @click="closeForm"></div>
+                </form>
+            </section>
+
+            <section class="sign-register" v-if="route == 'signup'">
+                <form action="php" @submit.prevent="register">
+                    <p class="zag"><strong>Регистрация</strong></p>
+                    <p class="bott">Фамилия <input v-model="UserForm.surname" name="surname" type="text" size="15"></p>
+                    <p class="bott">Имя: <input v-model="UserForm.name" name="name" type="text" size="15"></p>
+                    <p class="bott">Отчество: <input v-model="UserForm.patronymic" name="patronymic" type="text"
+                            size="15"></p>
+                    <p class="bott">Номер оружейной лицензии: <input v-model="UserForm.weapon_license_number"
+                            name="weapon_license_number" type="text" size="15"></p>
+                    <p class="bott">Телефон: <input name="login" v-model="UserForm.phone_number" type="text" size="15">
+                    </p>
+                    <p class="bott">Пароль: <input name="password" v-model="UserForm.password" type="password"
+                            size="15"></p>
+                    <p class="bott">Логин: <input v-model="UserForm.login" name="login" type="text" size="15"></p>
+                    <p class="bott">Паспорт серия: <input v-model="UserForm.passport_series" name="passport_series"
+                            type="text" size="15"></p>
+                    <p class="bott">Паспорт номер: <input name="passport_id" v-model="UserForm.passport_id" type="text"
+                            size="15"></p>
+                    <p class="bott but"><button>Зарегистрироваться</button></p>
+                </form>
+            </section>
+
+            <section class="sign-authorize" v-if="route == 'signin'">
+                <form action="php">
+                    <p class="zag"><strong>Авторизация</strong></p>
+                    <p class="bott">Телефон: <input name="login" type="text" size="15"
+                            v-model="formSignUser.phone_number"></p>
+                    <p class="bott">Пароль: <input name="password" type="password" size="15"
+                            v-model="formSignUser.password"></p>
+                    <p class="bott"><input @click.prevent="signin" class="signsubmit-authorize" type="submit"
+                            name="sign" value="Авторизоваться" size="15"></p>
+                    <p class="bott"><button @click.prevent="route = 'signup'">Регистрация</button></p>
+                </form>
+            </section>
+
+            <section id="products_page" v-if="route == 'products'">
+                <div class="multi">
+                    <div class="cards" v-for="p in products" :key="p.id">
+
+                        <div class="card-image">
+                            <img :src="p.image" alt="img" width="194px">
+                        </div>
+                        <div class="card-descr">
+                            <h4> {{p.product_name}}</h4>
+                            <div class="description">
+                                <p>{{p.characteristic}}</p>
+                            </div>
+                            <div class="price">
+                                <p>{{p.product_price}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <footer>
+            <div class="container footer-inner">
+                <a href=""><img src="images/logotip.png" alt="logo"></a>
+                <div class="footer-middle">
+                    <div class="footer-middle-item">
+                        <p class="footer-text">
+                            ул.Коста 177
+                        </p>
+                        <p class="footer-text">Владикавказ</p>
+                    </div>
+                    <div class="footer-middle-item">
+                        <p class="footer-text">
+                            Телефон:<span class="footer-text-span">77-77-77</span>
+                        </p>
+                        <p class="footer-text">Почта: gunshop@mail.ru</p>
+                    </div>
+                </div>
+                <p class="footer-bottom-text">
+                    ThemeREX © 2021 All Rights Reserved.
+                </p>
+            </div>
+        </footer>
+    </div>
+    <script src="vue.global.js"></script>
+    <script src="index.js"></script>
+</body>
+
+</html>
